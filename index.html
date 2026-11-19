@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boccarossa – Occhiali di Luigi Boccarossa</title>
+  <link rel="stylesheet" href="css/boccarossa.css">
+<!-- Three.js da CDN: "three" è la libreria, "three/addons/" sono gli strumenti extra (controlli, loader...) -->
+<script type="importmap">
+{
+"imports": {
+"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+}
+}
+</script>
+</head>
+<!-- mostra-barra: il menu in alto si vede subito, così si può saltare a ogni pagina senza scendere -->
+<body class="mostra-barra">
+
+    <!-- la barra in alto: a sinistra il nome, a destra le voci che portano alle schermate -->
+    <nav class="barra">
+        <div class="barra-dentro">
+            <span class="barra-nome">Boccarossa</span>
+            <div class="barra-link">
+                <a class="vai-inizio" href="#">Home</a>          <!-- l'inizio: solo gli occhiali -->
+                <a class="vai-colori" href="#">Colori</a>        <!-- la prima schermata, dove compaiono i colori -->
+                <a href="#apri">Dettagli</a>                     <!-- le aste che si aprono e si chiudono -->
+                <a href="#prova">Provali</a>                     <!-- l'ultima schermata, con la fotocamera -->
+            </div>
+        </div>
+    </nav>
+
+    <!-- l'apertura: all'inizio solo gli occhiali che girano; scorrendo compaiono il nome e l'essenziale -->
+    <header class="apertura">
+        <div class="apertura-fisso">
+            <div class="visore-apertura">
+                <p class="avviso">Caricamento…</p>
+            </div>
+
+            <!-- compare per primo: il nome -->
+            <div class="apertura-testi">
+                <h1 class="titolone">Boccarossa glasses</h1>
+                <p class="sottotitolo">Leggeri. Precisi. Tuoi.</p>
+            </div>
+
+            <!-- compare dopo: i colori -->
+            <div class="apertura-info">
+                <!-- i colori: sopra le montature (i camo), sotto le lenti; i tondini li crea camo.js.
+                     La scelta vale per tutti gli occhiali del sito, anche nella prova con la fotocamera -->
+                <div class="comando-colori due-file">
+                    <div class="fila">
+                        <span class="colore-scelto">Originale</span>
+                        <div class="campioni campioni-montatura"></div>
+                    </div>
+                    <div class="fila">
+                        <span class="colore-scelto lente-scelta">Trasparente</span>
+                        <div class="campioni campioni-lenti"></div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="scorri">Scorri</p>
+        </div>
+    </header>
+
+    <!-- PAGINA 2: le stanghette si chiudono e si riaprono con lo slider -->
+    <section class="scena-slide" id="apri" data-scena="apri">
+        <div class="testi">
+            <h2 class="titolo-scena">Apertura e chiusura</h2>
+            <p class="testo-scena">Le aste girano sulla cerniera e si ripiegano dietro le lenti, senza toccarle.</p>
+        </div>
+        <div class="visore-scena"></div>
+        <!-- lo slider: 0 = aperti, 100 = chiusi -->
+        <div class="comando">
+            <span class="comando-estremo">Aperti</span>
+            <input type="range" class="slide" min="0" max="100" value="0" aria-label="Chiudi le aste">
+            <span class="comando-estremo">Chiusi</span>
+        </div>
+    </section>
+
+    <!-- PAGINA 3: l'esploso, i pezzi si separano con lo slider -->
+    <section class="scena-slide" id="esploso" data-scena="esploso">
+        <div class="testi">
+            <h2 class="titolo-scena">Ogni pezzo, al suo posto.</h2>
+            <p class="testo-scena"><span class="dato-pezzi">–</span> pezzi, disegnati uno per uno e montati insieme.</p>
+        </div>
+        <div class="visore-scena"></div>
+        <!-- lo slider: 0 = montati, 100 = esploso -->
+        <div class="comando">
+            <span class="comando-estremo">Montati</span>
+            <input type="range" class="slide" min="0" max="100" value="0" aria-label="Separa i pezzi">
+            <span class="comando-estremo">Esploso</span>
+        </div>
+    </section>
+
+    <!-- PAGINA 4: i dettagli, con lo slider la camera va da un punto all'altro -->
+    <section class="scena-slide" id="dettagli" data-scena="dettagli">
+            <div class="testi">
+                <h2 class="titolo-scena">Visti da vicino.</h2>
+            </div>
+            <div class="visore-scena"></div>
+            <div class="didascalie">
+                <div class="didascalia attiva">
+                    <span class="numero-dettaglio">01</span>
+                    <h3>La cerniera.</h3>
+                    <p>Il punto in cui frontale e asta si incontrano: piccolo, ma regge tutto il movimento.</p>
+                </div>
+                <div class="didascalia">
+                    <span class="numero-dettaglio">02</span>
+                    <h3>La bocca rossa.</h3>
+                    <p>Sul fianco dell'asta, la firma di Boccarossa: piccola, lucida, rosso rossetto.</p>
+                </div>
+                <div class="didascalia">
+                    <span class="numero-dettaglio">03</span>
+                    <h3>Il ponte.</h3>
+                    <p>Unisce le due lenti e appoggia sul naso. È qui che gli occhiali trovano l'equilibrio.</p>
+                </div>
+                <div class="didascalia">
+                    <span class="numero-dettaglio">04</span>
+                    <h3>La punta dell'asta.</h3>
+                    <p>Si piega dietro l'orecchio per tenerli fermi, anche quando ti muovi.</p>
+                </div>
+            </div>
+            <!-- lo slider: 0 = la cerniera, poi la bocca rossa, il ponte e, a 100, la punta dell'asta -->
+            <div class="comando">
+                <span class="comando-estremo">Cerniera</span>
+                <input type="range" class="slide" min="0" max="100" value="0" aria-label="Scegli il dettaglio">
+                <span class="comando-estremo">Punta</span>
+            </div>
+    </section>
+
+    <!-- PAGINA 5: la prova con la fotocamera (il codice è in prova-fotocamera.js) -->
+    <section class="pagina-prova" id="prova">
+        <h2 class="titolo-scena">Provali.</h2>
+
+        <!-- il palco: prima gli occhiali che girano, poi i visi con gli occhiali addosso -->
+        <div class="palco">
+            <video class="palco-video" playsinline muted></video>
+            <p class="palco-stato">Fotocamera spenta</p>
+            <div class="palco-centro">
+                <button class="pillola grande btn-accendi" disabled>Provali</button>
+                <p class="palco-avviso"></p>                      <!-- vuota: si riempie solo se qualcosa va storto -->
+            </div>
+        </div>
+
+        <!-- "Scatta foto" e "Spegni camera" compaiono solo quando la fotocamera è accesa -->
+        <div class="prova-comandi solo-foto">
+            <button class="pillola grande btn-foto" disabled>Scatta foto</button>
+            <button class="pillola grande chiara btn-spegni" disabled>Spegni camera</button>
+        </div>
+
+        <!-- gli stessi colori della prima pagina: si possono cambiare anche con la fotocamera accesa -->
+        <div class="prova-colori">
+            <div class="comando-colori due-file">
+                <div class="fila">
+                    <span class="colore-scelto">Originale</span>
+                    <div class="campioni campioni-montatura"></div>
+                </div>
+                <div class="fila">
+                    <span class="colore-scelto lente-scelta">Trasparente</span>
+                    <div class="campioni campioni-lenti"></div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <footer class="piede">
+        <div class="piede-dentro">
+            <span>Occhiali disegnati da Luigi Boccarossa</span>
+        </div>
+    </footer>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';   // legge i file .glb
+        // la stessa preparazione dell'archivio: grandezza uguale e modello al centro
+        import { CARTELLA, sistemaModello } from './js/archivio-occhiali.js';
+        // le cerniere e la bocca rossa: in un file a parte, perché servono anche a boccarossa_prova.html
+        import { preparaCerniere, piegaAste, aggiungiBocca } from './js/boccarossa-modello.js';
+        // i sei camo (gli stessi del configuratore) e i tondini per sceglierli
+        import { preparaColori, creaCampioni, coloreSalvato, preparaLenti, creaCampioniLenti, lenteSalvata } from './js/camo.js';
+        // la prova con la fotocamera (l'ultima pagina)
+        import { creaProva, MAX_VISI } from './js/prova-fotocamera.js';
+
+        // ===== A. una "vista" 3D: scena, camera, luci e renderer dentro un riquadro =====
+        //     Ce ne sono quattro (apertura + tre schermate), ognuna con la sua copia degli occhiali
+        function nuovaVista(contenitore) {
+            const scena = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(30, 1, 0.01, 100);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;   // luci e ombre morbide, da foto di prodotto
+            contenitore.appendChild(renderer.domElement);
+
+            // luci da studio: una morbida dappertutto, una principale e una da dietro per il contorno
+            scena.add(new THREE.HemisphereLight(0xffffff, 0xe6ecf1, 1.6));   // cielo bianco, pavimento bianco ghiaccio come la pagina
+            const principale = new THREE.DirectionalLight(0xffffff, 2.2);
+            principale.position.set(-4, 5, 3);
+            camera.add(principale);
+            const contorno = new THREE.DirectionalLight(0xffffff, 1.4);   // da dietro: disegna il bordo della montatura
+            contorno.position.set(4, 2, -4);
+            camera.add(contorno);
+            scena.add(camera);
+
+            function adattaMisura() {
+                const l = renderer.domElement.clientWidth, a = renderer.domElement.clientHeight;
+                renderer.setSize(l, a, false);
+                camera.aspect = l / a;
+                camera.updateProjectionMatrix();
+            }
+            new ResizeObserver(adattaMisura).observe(contenitore);
+
+            const vista = { scena: scena, camera: camera, renderer: renderer, visibile: false, modello: null };
+            // si disegna solo quando è sullo schermo
+            new IntersectionObserver(function(v) { vista.visibile = v[0].isIntersecting; }).observe(contenitore);
+            return vista;
+        }
+
+        // ===== C. l'esploso: ogni pezzo si allontana dal centro, nella sua direzione =====
+        function preparaEsploso(modello) {
+            modello.updateMatrixWorld(true);
+            const centro = new THREE.Box3().setFromObject(modello).getCenter(new THREE.Vector3());
+            const pezzi = [];
+            modello.traverse(function(pezzo) {
+                if (!pezzo.isMesh) { return; }
+                const suo = new THREE.Box3().setFromObject(pezzo).getCenter(new THREE.Vector3());
+                // la direzione in cui scappa, nelle coordinate di chi lo contiene
+                const verso = suo.clone().sub(centro);
+                verso.set(verso.x * 1.1, verso.y * 2.2 + 0.05, verso.z * 1.6);   // più in alto e più indietro: si legge meglio
+                const mondoA = pezzo.parent.worldToLocal(suo.clone());
+                const mondoB = pezzo.parent.worldToLocal(suo.clone().add(verso));
+                pezzi.push({ pezzo: pezzo, base: pezzo.position.clone(), spinta: mondoB.sub(mondoA) });
+            });
+            return pezzi;
+        }
+
+        // ===== D. un po' di matematica per le animazioni =====
+        const limita = function(x) { return Math.min(1, Math.max(0, x)); };
+        const morbido = function(a, b, x) { const t = limita((x - a) / (b - a)); return t * t * (3 - 2 * t); };   // parte e arriva piano
+
+        // ===== E. le quattro viste =====
+        const apertura = nuovaVista(document.querySelector('.visore-apertura'));
+        apertura.camera.position.set(2.6, 1.1, 3.8);
+        const controlli = new OrbitControls(apertura.camera, apertura.renderer.domElement);
+        controlli.enableDamping = true;
+        controlli.enablePan = false;
+        controlli.enableZoom = false;          // la rotella scorre la pagina
+        controlli.autoRotate = true;
+        controlli.autoRotateSpeed = 1.6;
+        controlli.minPolarAngle = Math.PI * 0.25;
+        controlli.maxPolarAngle = Math.PI * 0.6;
+
+        // tutte le schermate: quelle con lo slider (apri, esploso) e quella a scorrimento (dettagli)
+        const sezioni = {};
+        document.querySelectorAll('.scena-slide').forEach(function(s) {
+            const vista = nuovaVista(s.querySelector('.visore-scena'));
+            const slider = s.querySelector('.slide');
+            const voce = {
+                sezione: s,
+                vista: vista,
+                slider: slider,
+                valore: 0,                     // dove sta andando l'animazione (lo dice lo slider)
+                ora: 0,                        // dove è adesso: insegue "valore" piano, così il movimento è morbido
+            };
+            // la schermata dei colori non ha lo slider (ha i tondini)
+            if (slider) {
+                slider.addEventListener('input', function() {
+                    voce.valore = slider.value / 100;
+                    slider.style.setProperty('--pieno', slider.value + '%');   // la parte scura del binario
+                });
+            }
+            // nei dettagli la camera la muove lo slider; nelle altre la puoi girare anche tu
+            if (s.dataset.scena !== 'dettagli') {
+                vista.camera.position.set(2.8, 1.3, 3.9);
+                // trascina per girare gli occhiali, gira da solo pianissimo; niente zoom (la rotella scorre la pagina)
+                voce.controlli = new OrbitControls(vista.camera, vista.renderer.domElement);
+                voce.controlli.enableDamping = true;
+                voce.controlli.enablePan = false;
+                voce.controlli.enableZoom = false;
+                voce.controlli.autoRotate = true;
+                voce.controlli.autoRotateSpeed = 0.6;
+            }
+            sezioni[s.dataset.scena] = voce;
+        });
+        let esploso = [];                      // i pezzi dell'esploso, pronti quando arriva il modello
+        let punti = null;                      // i tre punti dei dettagli
+
+        // la prova con la fotocamera: gli elementi dell'ultima pagina
+        const paginaProva = document.getElementById('prova');
+        const palco = paginaProva.querySelector('.palco');
+        const mettiOcchialiProva = creaProva({
+            palco: palco,
+            video: palco.querySelector('.palco-video'),
+            stato: palco.querySelector('.palco-stato'),
+            avviso: palco.querySelector('.palco-avviso'),
+            btnAccendi: palco.querySelector('.btn-accendi'),
+            btnSpegni: paginaProva.querySelector('.btn-spegni'),
+            btnFoto: paginaProva.querySelector('.btn-foto')
+        });
+
+        // i tondini ci sono due volte (prima pagina e prova): scegliere in uno aggiorna anche l'altro.
+        // crea: creaCampioni o creaCampioniLenti; classe: quale fila; salvato: da dove ripartire
+        function tondiniGemelli(crea, classe, classeScritta, applica, salvato) {
+            const scelte = [];
+            let fermo = false;                 // evita che i due si richiamino all'infinito
+            document.querySelectorAll('.comando-colori').forEach(function(comando) {
+                scelte.push(crea(comando.querySelector(classe), comando.querySelector(classeScritta), function(id) {
+                    applica(id);
+                    if (fermo) { return; }
+                    fermo = true;
+                    scelte.forEach(function(s) { s(id); });
+                    fermo = false;
+                }));
+            });
+            scelte[0](salvato);
+        }
+
+        // ===== F. il modello: si carica una volta, poi una copia per ogni vista =====
+        new GLTFLoader().load(CARTELLA + 'luigiboccarossa.glb', function(gltf) {
+            const originale = gltf.scene;
+            preparaCerniere(originale);        // prima le cerniere (misure del file, in metri)...
+            aggiungiBocca(originale);          // ...poi la bocca rossa sull'asta destra...
+            const misure = sistemaModello(originale, [], [0, 0, 0]);   // ...poi grandezza e centro
+            document.querySelector('.avviso').remove();
+
+            // quanti pezzi ha il modello, per la pagina dell'esploso (la bocca non conta: l'abbiamo aggiunta noi)
+            let pezzi = 0;
+            originale.traverse(function(p) { if (p.isMesh && p.name !== 'bocca-rossa') { pezzi++; } });
+            document.querySelector('.dato-pezzi').textContent = pezzi;
+
+            // una copia per vista (clone usa gli stessi materiali e le stesse forme: pesa poco)
+            apertura.modello = originale;
+            apertura.scena.add(originale);
+            Object.keys(sezioni).forEach(function(nome) {
+                const copia = originale.clone();
+                sezioni[nome].vista.modello = copia;
+                sezioni[nome].vista.scena.add(copia);
+            });
+            esploso = preparaEsploso(sezioni.esploso.vista.modello);
+
+            // la prova: una copia degli occhiali per ogni viso che può riconoscere
+            const copieProva = [];
+            for (let i = 0; i < MAX_VISI; i++) { copieProva.push(originale.clone()); }
+            mettiOcchialiProva(copieProva, misure);
+
+            // i colori: la scelta cambia gli occhiali in TUTTE le viste del sito (anche nella prova)
+            const tutti = [originale]
+                .concat(Object.keys(sezioni).map(function(n) { return sezioni[n].vista.modello; }))
+                .concat(copieProva);
+            const applicaColore = preparaColori(tutti, Math.max(misure.x, misure.y, misure.z));
+            tondiniGemelli(creaCampioni, '.campioni-montatura', '.colore-scelto:not(.lente-scelta)', applicaColore, coloreSalvato());
+
+            // le lenti: anche loro su tutte le viste, e ricordate per la prossima volta
+            const applicaLente = preparaLenti(tutti);
+            tondiniGemelli(creaCampioniLenti, '.campioni-lenti', '.lente-scelta', applicaLente, lenteSalvata());
+
+            // i dettagli: dove guardare (cerniera destra, ponte, punta dell'asta destra)
+            const copiaDettagli = sezioni.dettagli.vista.modello;
+            copiaDettagli.updateMatrixWorld(true);
+            const scatola = new THREE.Box3().setFromObject(copiaDettagli);
+            const cerniera = copiaDettagli.getObjectByName('cerniera-destra').getWorldPosition(new THREE.Vector3());
+            const asta = new THREE.Box3().setFromObject(copiaDettagli.getObjectByName('cerniera-destra'));
+            const bocca = copiaDettagli.getObjectByName('bocca-rossa');
+            const doveBocca = bocca ? bocca.getWorldPosition(new THREE.Vector3()) : cerniera.clone();
+            punti = [
+                // [dove guarda la camera, da dove guarda, quanto è vicina]
+                { guarda: cerniera, da: new THREE.Vector3(1.0, 0.45, 0.35), vicino: 0.9 },
+                { guarda: doveBocca, da: new THREE.Vector3(1.0, 0.15, 0.05), vicino: 0.55 },   // la bocca: dritta di lato, vicina
+                { guarda: new THREE.Vector3(0, scatola.max.y * 0.6, scatola.max.z), da: new THREE.Vector3(0.15, 0.25, 1), vicino: 1.1 },
+                { guarda: new THREE.Vector3(asta.max.x, (asta.min.y + asta.max.y) / 2, asta.min.z + 0.15), da: new THREE.Vector3(0.9, 0.35, -0.6), vicino: 1.0 }
+            ];
+            punti.forEach(function(p) { p.da.normalize(); });
+        }, undefined, function(errore) {
+            console.error('luigiboccarossa.glb non caricato:', errore);
+            document.querySelector('.avviso').textContent = 'Il modello non si è caricato. Apri la pagina con Live Server.';
+        });
+
+        // ===== G. cosa fa ogni schermata, dato p da 0 a 1 (lo slider, oppure lo scorrimento per i dettagli) =====
+        function scenaApri(s, p) {
+            piegaAste(s.vista.modello, p);     // 0 = aperti, 1 = chiusi
+        }
+
+        function scenaEsploso(s, p) {
+            // ogni pezzo si sposta dalla sua posizione nella sua direzione, tanto quanto dice lo slider
+            esploso.forEach(function(e) {
+                e.pezzo.position.copy(e.base).addScaledVector(e.spinta, p);
+            });
+            // più si separano, più la camera si allontana, così l'esploso resta tutto dentro
+            const distanza = 4.9 + p * 2.2;
+            s.vista.camera.position.setLength(distanza);
+        }
+
+        const guardaOra = new THREE.Vector3(), posizioneOra = new THREE.Vector3();
+        const didascalie = document.querySelectorAll('.didascalia');
+
+        function scenaDettagli(s, p) {
+            if (!punti) { return; }
+            // tre tappe: la camera resta su ognuna un po', poi vola alla successiva
+            const tratto = p * (punti.length - 1);              // da 0 a 2
+            const i = Math.min(Math.floor(tratto), punti.length - 2);
+            const t = morbido(0.35, 0.65, tratto - i);         // resta ferma all'inizio e alla fine di ogni tratto
+            const a = punti[i], b = punti[i + 1];
+            guardaOra.lerpVectors(a.guarda, b.guarda, t);
+            const verso = a.da.clone().lerp(b.da, t).normalize();
+            const vicino = a.vicino + (b.vicino - a.vicino) * t;
+            posizioneOra.copy(guardaOra).addScaledVector(verso, vicino);
+            s.vista.camera.position.copy(posizioneOra);
+            s.vista.camera.lookAt(guardaOra);
+
+            const attiva = Math.round(tratto);
+            didascalie.forEach(function(d, k) { d.classList.toggle('attiva', k === attiva); });
+        }
+
+        const COSA_FARE = { apri: scenaApri, esploso: scenaEsploso, dettagli: scenaDettagli };
+
+        // ===== G2. l'apertura: più scorri, più compaiono i testi e più gli occhiali fanno spazio =====
+        const sezioneApertura = document.querySelector('.apertura');
+        const testiApertura = document.querySelector('.apertura-testi');
+        const infoApertura = document.querySelector('.apertura-info');
+        const scorri = document.querySelector('.scorri');
+
+        function aggiornaApertura() {
+            // p: 0 = appena aperto il sito, 1 = fine dell'apertura (poi la pagina scorre normale)
+            const r = sezioneApertura.getBoundingClientRect();
+            const p = limita(-r.top / (r.height - window.innerHeight));
+
+            const nome = morbido(0.08, 0.4, p);    // prima il nome...
+            const info = morbido(0.38, 0.7, p);    // ...poi le informazioni
+            testiApertura.style.opacity = nome;
+            testiApertura.style.transform = 'translateY(' + (1 - nome) * 40 + 'px)';
+            infoApertura.style.opacity = info;
+            infoApertura.style.transform = 'translateY(' + (1 - info) * 40 + 'px)';
+            infoApertura.classList.toggle('visibile', info > 0.5);
+            scorri.style.opacity = 1 - morbido(0, 0.08, p);
+
+            // gli occhiali: grandi all'inizio, poi si rimpiccioliscono per lasciare spazio a testi e colori
+            const zoom = 1.35 - morbido(0.05, 0.6, p) * 0.55;
+            if (Math.abs(apertura.camera.zoom - zoom) > 0.0005) {
+                apertura.camera.zoom = zoom;
+                apertura.camera.updateProjectionMatrix();
+            }
+        }
+
+        // il menu: "Boccarossa" torna all'inizio; "Colori" scende fino a dove i colori sono comparsi
+        // (le altre voci sono link normali alle pagine: #apri, #esploso, #dettagli, #prova)
+        document.querySelector('.vai-inizio').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        document.querySelector('.vai-colori').addEventListener('click', function(e) {
+            e.preventDefault();
+            const corsa = sezioneApertura.offsetHeight - window.innerHeight;   // quanto si scorre nell'apertura
+            window.scrollTo({ top: sezioneApertura.offsetTop + corsa * 0.85, behavior: 'smooth' });
+        });
+
+        // ===== H. il ciclo di disegno: solo le viste sullo schermo =====
+        function anima() {
+            if (apertura.visibile) {
+                aggiornaApertura();
+                controlli.update();
+                apertura.renderer.render(apertura.scena, apertura.camera);
+            }
+            Object.keys(sezioni).forEach(function(nome) {
+                const s = sezioni[nome];
+                if (!s.vista.visibile || !s.vista.modello) { return; }
+                // ci si avvicina al valore dello slider un pezzetto per volta (movimento morbido)
+                s.ora += (s.valore - s.ora) * 0.12;
+                if (COSA_FARE[nome]) { COSA_FARE[nome](s, s.ora); }   // i colori non hanno animazione
+                if (s.controlli) { s.controlli.update(); }
+                s.vista.renderer.render(s.vista.scena, s.vista.camera);
+            });
+            requestAnimationFrame(anima);
+        }
+        anima();
+    </script>
+
+</body>
+</html>

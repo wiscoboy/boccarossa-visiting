@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Provali – Boccarossa</title>
+  <!-- lo stesso stile di index.html -->
+  <link rel="stylesheet" href="css/boccarossa.css">
+<!-- Three.js da CDN: "three" è la libreria, "three/addons/" sono gli strumenti extra (controlli, loader...) -->
+<script type="importmap">
+{
+"imports": {
+"three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+}
+}
+</script>
+</head>
+<!-- mostra-barra: qui la barra in alto si vede subito -->
+<body class="mostra-barra">
+
+    <!-- la barra in alto: la stessa della presentazione -->
+    <nav class="barra">
+        <div class="barra-dentro">
+            <a class="barra-nome" href="index.html">Boccarossa</a>
+            <div class="barra-link">
+                <a href="index.html#apri">Apertura</a>
+                <a href="index.html#esploso">Esploso</a>
+                <a href="index.html#dettagli">Dettagli</a>
+                <a class="pillola" href="#">Provali</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="prova">
+        <p class="occhiello">Prova virtuale</p>
+        <h1 class="titolone">Provali.</h1>
+        <p class="sottotitolo">Accendi la fotocamera: gli occhiali Boccarossa si appoggiano sul tuo viso e ti seguono mentre ti muovi.</p>
+
+        <!-- il palco: prima gli occhiali che girano, poi il tuo viso con gli occhiali addosso -->
+        <div class="palco">
+            <video class="palco-video" playsinline muted></video>
+            <p class="palco-stato">Fotocamera spenta</p>
+            <div class="palco-centro">
+                <button class="pillola grande btn-accendi" disabled>Attiva fotocamera</button>
+                <p class="palco-avviso">Caricamento degli occhiali…</p>
+            </div>
+        </div>
+
+        <!-- i comandi: si possono usare solo con la fotocamera accesa -->
+        <div class="prova-comandi">
+            <button class="bottone btn-spegni" disabled>Spegni fotocamera</button>
+            <button class="bottone blu btn-foto" disabled>Scatta una foto</button>
+        </div>
+
+        <!-- i colori: i sei camo per la montatura e i sei colori delle lenti,
+             si possono cambiare anche con la fotocamera accesa (i tondini li crea camo.js) -->
+        <div class="prova-colori">
+            <div class="comando-colori">
+                <span class="colore-scelto">Originale</span>
+                <div class="campioni"></div>
+            </div>
+            <div class="comando-colori">
+                <span class="colore-scelto lente-scelta">Trasparente</span>
+                <div class="campioni campioni-lenti"></div>
+            </div>
+        </div>
+
+        <p class="prova-nota">L'immagine della fotocamera resta sul tuo computer: non viene salvata né inviata a nessuno.</p>
+    </main>
+
+    <footer class="piede">
+        <div class="piede-dentro">
+            <span>Occhiali disegnati da Luigi Boccarossa</span>
+            <a href="index.html">Torna a Boccarossa</a>
+        </div>
+    </footer>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';   // legge i file .glb
+        import { CARTELLA, sistemaModello } from './js/archivio-occhiali.js';
+        // le cerniere e la bocca rossa: le stesse della presentazione
+        import { preparaCerniere, aggiungiBocca } from './js/boccarossa-modello.js';
+        // i sei camo: parte dal colore scelto nella presentazione
+        import { preparaColori, creaCampioni, coloreSalvato, preparaLenti, creaCampioniLenti, lenteSalvata } from './js/camo.js';
+
+        const palco = document.querySelector('.palco');
+        const video = palco.querySelector('.palco-video');
+        const stato = palco.querySelector('.palco-stato');
+        const avviso = palco.querySelector('.palco-avviso');
+        const btnAccendi = document.querySelector('.btn-accendi');
+        const btnSpegni = document.querySelector('.btn-spegni');
+        const btnFoto = document.querySelector('.btn-foto');
+
+        // ===== A. il renderer: uno solo, disegna l'anteprima oppure la prova =====
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        palco.appendChild(renderer.domElement);
+
+        function luci(scena, camera) {
+            scena.add(new THREE.HemisphereLight(0xffffff, 0xe6ecf1, 1.6));
+            const principale = new THREE.DirectionalLight(0xffffff, 2.2);
+            principale.position.set(-4, 5, 3);
+            const contorno = new THREE.DirectionalLight(0xffffff, 1.4);
+            contorno.position.set(4, 2, -4);
+            if (camera) { camera.add(principale); camera.add(contorno); scena.add(camera); }
+            else { scena.add(principale); scena.add(contorno); }
+        }
+
+        // ===== B. l'anteprima: prima di accendere, gli occhiali girano da soli al centro del palco =====
+        const scenaAnteprima = new THREE.Scene();
+        const cameraAnteprima = new THREE.PerspectiveCamera(30, 1, 0.01, 100);
+        cameraAnteprima.position.set(0, 0.9, 4.6);
+        cameraAnteprima.lookAt(0, 0, 0);
+        luci(scenaAnteprima, cameraAnteprima);
+        const giostra = new THREE.Group();     // il gruppo che gira
+        scenaAnteprima.add(giostra);
+
+        // ===== C. la prova: una camera "piatta" (ortografica) grande come il palco, in pixel =====
+        //     Così un punto del viso sul video e un punto della scena coincidono
+        const scenaProva = new THREE.Scene();
+        const cameraProva = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 10000);
+        cameraProva.position.z = 5000;
+        luci(scenaProva, null);
+
+        // fino a 4 visi insieme: per ognuno un paio di occhiali.
+        // Ogni viso ha la sua àncora (segue il viso), dentro gli occhiali spostati in modo che il frontale
+        // stia sul naso, e la sua testa invisibile (non si vede, ma nasconde le aste che passano dietro il viso)
+        const MAX_VISI = 4;
+        const formaTesta = new THREE.SphereGeometry(1, 32, 16);
+        const materialeTesta = new THREE.MeshBasicMaterial({ colorWrite: false });
+        const visi = [];
+        for (let i = 0; i < MAX_VISI; i++) {
+            const ancora = new THREE.Group();
+            const interno = new THREE.Group();
+            ancora.add(interno);
+            ancora.visible = false;
+            scenaProva.add(ancora);
+            const testa = new THREE.Mesh(formaTesta, materialeTesta);
+            testa.renderOrder = -1;
+            testa.visible = false;
+            scenaProva.add(testa);
+            visi.push({ ancora: ancora, interno: interno, testa: testa, occhiali: null, pronta: false });
+        }
+
+        // il canvas prende sempre la misura del palco
+        function adattaMisura() {
+            const l = renderer.domElement.clientWidth, a = renderer.domElement.clientHeight;
+            renderer.setSize(l, a, false);
+            cameraAnteprima.aspect = l / a;
+            cameraAnteprima.updateProjectionMatrix();
+            cameraProva.left = -l / 2; cameraProva.right = l / 2;
+            cameraProva.top = a / 2; cameraProva.bottom = -a / 2;
+            cameraProva.updateProjectionMatrix();
+        }
+        new ResizeObserver(adattaMisura).observe(palco);
+
+        // ===== D. il modello: gli occhiali di Luigi Boccarossa, con la bocca rossa =====
+        let modello = null, misure = null;
+        new GLTFLoader().load(CARTELLA + 'luigiboccarossa.glb', function(gltf) {
+            modello = gltf.scene;
+            preparaCerniere(modello);
+            aggiungiBocca(modello);
+            misure = sistemaModello(modello, [], [0, 0, 0]);
+            giostra.add(modello);
+
+            // una copia degli occhiali per ogni viso (il primo usa l'originale).
+            // clone() usa gli stessi materiali: colore e lente cambiano su tutte insieme
+            const lato = Math.max(misure.x, misure.y, misure.z);
+            visi.forEach(function(v, i) {
+                v.occhiali = i === 0 ? modello : modello.clone();
+                v.interno.position.z = -misure.z / lato * 0.85;   // il frontale va sulla radice del naso
+                if (i > 0) { v.interno.add(v.occhiali); }
+            });
+            const tutti = visi.map(function(v) { return v.occhiali; });
+
+            // i colori della montatura: i tondini sotto i bottoni, si riparte dall'ultimo scelto
+            const applicaColore = preparaColori(tutti, lato);
+            const scegliColore = creaCampioni(
+                document.querySelector('.campioni:not(.campioni-lenti)'),
+                document.querySelector('.colore-scelto:not(.lente-scelta)'),
+                applicaColore
+            );
+            scegliColore(coloreSalvato());
+
+            // i colori delle lenti: stessa cosa
+            const applicaLente = preparaLenti(tutti);
+            const scegliLente = creaCampioniLenti(
+                document.querySelector('.campioni-lenti'),
+                document.querySelector('.lente-scelta'),
+                applicaLente
+            );
+            scegliLente(lenteSalvata());
+            btnAccendi.disabled = false;
+            avviso.textContent = 'Il browser ti chiederà il permesso di usare la fotocamera.';
+        }, undefined, function(errore) {
+            console.error('luigiboccarossa.glb non caricato:', errore);
+            avviso.textContent = 'Gli occhiali non si sono caricati. Apri la pagina con Live Server.';
+        });
+
+        // ===== E. accendere e spegnere la fotocamera =====
+        let rilevatore = null;                 // il riconoscimento del viso (MediaPipe, si scarica la prima volta)
+        let flusso = null;
+        let acceso = false;
+
+        async function preparaRilevatore() {
+            const VERSIONE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+            const { FaceLandmarker, FilesetResolver } = await import(VERSIONE + '/vision_bundle.mjs');
+            const file = await FilesetResolver.forVisionTasks(VERSIONE + '/wasm');
+            return FaceLandmarker.createFromOptions(file, {
+                baseOptions: {
+                    modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+                    delegate: 'GPU'
+                },
+                runningMode: 'VIDEO',
+                numFaces: MAX_VISI             // riconosce fino a 4 visi insieme
+            });
+        }
+
+        async function accendi() {
+            btnAccendi.disabled = true;
+            avviso.textContent = 'Avvio della fotocamera…';
+            try {
+                flusso = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 1280, height: 720 }, audio: false });
+                video.srcObject = flusso;
+                await video.play();
+                if (!rilevatore) {
+                    avviso.textContent = 'Preparo il riconoscimento del viso…';
+                    rilevatore = await preparaRilevatore();
+                }
+            } catch (errore) {
+                console.error('fotocamera:', errore);
+                spegni();
+                avviso.textContent = errore.name === 'NotAllowedError'
+                    ? 'Permesso negato: consenti la fotocamera nelle impostazioni del browser.'
+                    : 'Fotocamera non disponibile (serve Live Server o un sito https).';
+                return;
+            }
+            // gli occhiali originali passano dalla giostra al primo viso
+            visi[0].interno.add(modello);
+            visi.forEach(function(v) { v.pronta = false; });
+            palco.classList.add('acceso');
+            acceso = true;
+            btnSpegni.disabled = false;
+            btnFoto.disabled = false;
+        }
+
+        function spegni() {
+            if (flusso) { flusso.getTracks().forEach(function(t) { t.stop(); }); }
+            flusso = null;
+            video.srcObject = null;
+            if (modello) { giostra.add(modello); }   // gli occhiali tornano a girare al centro
+            palco.classList.remove('acceso');
+            acceso = false;
+            btnAccendi.disabled = !modello;
+            btnSpegni.disabled = true;
+            btnFoto.disabled = true;
+            avviso.textContent = 'Il browser ti chiederà il permesso di usare la fotocamera.';
+            stato.textContent = 'Fotocamera spenta';
+            stato.classList.remove('trovato');
+        }
+
+        btnAccendi.addEventListener('click', accendi);
+        btnSpegni.addEventListener('click', spegni);
+
+        // ===== F. seguire il viso =====
+        // da un punto di MediaPipe (0–1 sul video) a un punto della scena (pixel, centro del palco = 0).
+        // Il video è a specchio e riempie il palco tagliando i bordi (come object-fit: cover)
+        function misuraVideo(L, A) {
+            const s = Math.max(L / video.videoWidth, A / video.videoHeight);
+            return { lv: video.videoWidth * s, av: video.videoHeight * s };
+        }
+
+        function puntoScena(p, L, A) {
+            const m = misuraVideo(L, A);
+            const x = (L - m.lv) / 2 + (1 - p.x) * m.lv;
+            const y = (A - m.av) / 2 + p.y * m.av;
+            return new THREE.Vector3(x - L / 2, A / 2 - y, -p.z * m.lv);
+        }
+
+        const assi = { x: new THREE.Vector3(), y: new THREE.Vector3(), z: new THREE.Vector3() };
+        const rotazione = new THREE.Matrix4(), giroViso = new THREE.Quaternion();
+        let ultimoTempo = -1;
+
+        function seguiVisi() {
+            if (video.readyState < 2 || video.currentTime === ultimoTempo) { return; }
+            ultimoTempo = video.currentTime;
+            const L = renderer.domElement.clientWidth, A = renderer.domElement.clientHeight;
+            const risultato = rilevatore.detectForVideo(video, performance.now());
+            const trovati = risultato.faceLandmarks || [];
+
+            // ogni viso trovato prende il suo paio di occhiali; quelli senza viso si nascondono
+            visi.forEach(function(v, i) {
+                if (trovati[i]) {
+                    seguiViso(v, trovati[i], L, A);
+                } else {
+                    v.ancora.visible = v.testa.visible = false;
+                    v.pronta = false;
+                }
+            });
+
+            const n = Math.min(trovati.length, MAX_VISI);
+            stato.textContent = n === 0 ? 'Non vedo nessun viso' : (n === 1 ? '1 viso trovato' : n + ' visi trovati');
+            stato.classList.toggle('trovato', n > 0);
+        }
+
+        function seguiViso(v, punti, L, A) {
+            const ancora = v.ancora, testa = v.testa;
+            ancora.visible = testa.visible = true;
+
+            // i punti che servono: angoli esterni degli occhi (33, 263), radice del naso (168), fronte (10), mento (152)
+            const occhioA = puntoScena(punti[33], L, A), occhioB = puntoScena(punti[263], L, A);
+            const naso = puntoScena(punti[168], L, A);
+            const fronte = puntoScena(punti[10], L, A), mento = puntoScena(punti[152], L, A);
+
+            // come è girato il viso: x da un occhio all'altro, y dal mento alla fronte, z verso di noi
+            assi.x.subVectors(occhioA, occhioB).normalize();
+            assi.y.subVectors(fronte, mento);
+            assi.y.addScaledVector(assi.x, -assi.y.dot(assi.x)).normalize();
+            assi.z.crossVectors(assi.x, assi.y);
+            rotazione.makeBasis(assi.x, assi.y, assi.z);
+            giroViso.setFromRotationMatrix(rotazione);
+
+            // quanto grandi: la montatura è circa 1,5 volte la distanza tra gli angoli esterni degli occhi
+            const distanzaOcchi = occhioA.distanceTo(occhioB);
+            const lato = Math.max(misure.x, misure.y, misure.z);
+            const scala = distanzaOcchi * 1.5 / (2 * misure.x / lato);
+
+            // un po' di morbidezza: niente salti, meno tremolio.
+            // Se il viso è "saltato" lontano (con più persone l'ordine dei visi a volte si scambia),
+            // gli occhiali vanno subito al posto nuovo invece di attraversare lo schermo
+            const lontano = ancora.position.distanceTo(naso) > distanzaOcchi * 1.5;
+            const morbido = (v.pronta && !lontano) ? 0.5 : 1;
+            ancora.position.lerp(naso, morbido);
+            ancora.quaternion.slerp(giroViso, morbido);
+            ancora.scale.lerp(new THREE.Vector3(scala, scala, scala), morbido);
+            v.pronta = true;
+
+            // la testa invisibile: un ovale grande come il viso, dietro la radice del naso
+            const altezzaViso = fronte.distanceTo(mento);
+            testa.position.copy(naso).addScaledVector(assi.z, -distanzaOcchi * 0.75);
+            testa.quaternion.copy(ancora.quaternion);
+            testa.scale.set(distanzaOcchi * 0.72, altezzaViso * 0.65, distanzaOcchi * 0.8);
+        }
+
+        // ===== G. la foto: il video a specchio + gli occhiali, in un'immagine da scaricare =====
+        let scatta = false;
+        btnFoto.addEventListener('click', function() { scatta = true; });
+
+        function salvaFoto() {
+            const tela = renderer.domElement;
+            const foto = document.createElement('canvas');
+            foto.width = tela.width;
+            foto.height = tela.height;
+            const ctx = foto.getContext('2d');
+            // il video come si vede: a specchio e tagliato ai bordi
+            const m = misuraVideo(foto.width, foto.height);
+            ctx.save();
+            ctx.translate(foto.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, (foto.width - m.lv) / 2, (foto.height - m.av) / 2, m.lv, m.av);
+            ctx.restore();
+            ctx.drawImage(tela, 0, 0);          // sopra, gli occhiali (va fatto subito dopo il disegno)
+            // un piccolo marchio in basso a destra
+            ctx.font = '600 ' + Math.round(foto.width / 40) + 'px -apple-system, Helvetica, Arial, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.textAlign = 'right';
+            ctx.fillText('Boccarossa', foto.width * 0.97, foto.height * 0.95);
+            foto.toBlob(function(file) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(file);
+                link.download = 'boccarossa-foto.png';
+                link.click();
+                setTimeout(function() { URL.revokeObjectURL(link.href); }, 1000);
+            }, 'image/png');
+        }
+
+        // ===== H. il ciclo di disegno =====
+        function anima() {
+            if (acceso && rilevatore) {
+                seguiVisi();
+                renderer.render(scenaProva, cameraProva);
+                if (scatta) { scatta = false; salvaFoto(); }
+            } else {
+                giostra.rotation.y += 0.006;   // l'anteprima gira piano
+                renderer.render(scenaAnteprima, cameraAnteprima);
+            }
+            requestAnimationFrame(anima);
+        }
+        anima();
+    </script>
+
+</body>
+</html>
